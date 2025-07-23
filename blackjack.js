@@ -58,17 +58,20 @@ function showResultModal(message) {
     let modalTitle = getEl('modal-title');
     let modalMessage = getEl('modal-message');
     if (!modal || !modalTitle || !modalMessage) return;
-    if (message.toLowerCase().includes('win')) {
-        modalTitle.textContent = 'Win!';
-        modalMessage.textContent = 'Congratulations!';
-    } else if (message.toLowerCase().includes('lose')) {
-        modalTitle.textContent = 'Lose!';
-        modalMessage.textContent = 'Better luck next time!';
-    } else {
-        modalTitle.textContent = 'Tie!';
-        modalMessage.textContent = 'It\'s a draw.';
-    }
-    modal.style.display = 'flex';
+    // Add a cooldown before showing the modal
+    setTimeout(function () {
+        if (message.toLowerCase().includes('win')) {
+            modalTitle.textContent = 'Win!';
+            modalMessage.textContent = 'Congratulations!';
+        } else if (message.toLowerCase().includes('lose')) {
+            modalTitle.textContent = 'Lose!';
+            modalMessage.textContent = 'Better luck next time!';
+        } else {
+            modalTitle.textContent = 'Tie!';
+            modalMessage.textContent = 'It\'s a draw.';
+        }
+        modal.style.display = 'flex';
+    }, 1.4); // 1.4 second delay after dealer cards are revealed
 }
 
 // Friend mode hit
@@ -180,42 +183,6 @@ function hit() {
         stay();
     }
 }
-function stay() {
-    canHit = false;
-    dealerSum = reduceAce(dealerSum, dealerAceCount);
-    yourSum = reduceAce(yourSum, yourAceCount);
-    const el = getEl;
-    if (el("dealer-cards")) el("dealer-cards").innerHTML = "";
-    let suit = hidden.suit;
-    if (suit === "♣") suit = "C";
-    if (suit === "♦") suit = "D";
-    if (suit === "♥") suit = "H";
-    if (suit === "♠") suit = "S";
-    let hiddenImg = document.createElement("img");
-    hiddenImg.src = "./cards/" + hidden.value + "-" + suit + ".png";
-    if (el("dealer-cards")) el("dealer-cards").append(hiddenImg);
-    if (el("dealer-sum")) el("dealer-sum").innerText = dealerSum;
-    let message = "";
-    let p1Bet = typeof bet === 'object' ? bet.p1 : bet;
-    if (yourSum > 21) {
-        message = "Bust! You Lose!";
-        credits.p1 -= p1Bet;
-    } else if (dealerSum > 21) {
-        message = "Dealer Busts! You Win!";
-        credits.p1 += p1Bet;
-    } else if (yourSum == dealerSum) {
-        message = "Tie!";
-    } else if (yourSum > dealerSum) {
-        message = "You Win!";
-        credits.p1 += p1Bet;
-    } else {
-        message = "You Lose!";
-        credits.p1 -= p1Bet;
-    }
-    updateCredits();
-    if (el("results")) el("results").innerText = message;
-    showResultModal(message);
-}
 
 // UI setup
 window.onload = function () {
@@ -231,9 +198,9 @@ function setupBetInputs() {
     if (!betRow) return;
     betRow.innerHTML = `
         <label for="bet-amount-p1">Bet P1:</label>
-        <input type="number" id="bet-amount-p1" min="1" value="10" class="game-btn" style="width:70px;">
+        <input type="number" id="bet-amount-p1" min="1" max="99999" value="10" class="game-btn" style="width:70px;">
         <label for="bet-amount-p2" id="bet-label-p2" style="display:none;">Bet P2:</label>
-        <input type="number" id="bet-amount-p2" min="1" value="10" class="game-btn" style="width:70px; display:none;">
+        <input type="number" id="bet-amount-p2" min="1" max="99999" value="10" class="game-btn" style="width:70px; display:none;">
         <button id="place-bet" class="game-btn">Place Bet</button>
         <button id="new-game" class="game-btn">New Game</button>
     `;
@@ -351,27 +318,23 @@ function startGame() {
         if (el("stay")) el("stay").onclick = stayFriend;
     } else {
         // Dealer setup
+        // Dealer gets two cards: first face up, second face down
+        window.dealerFirstCard = deck.pop();
         hidden = deck.pop();
+        let dealerFirstSuit = window.dealerFirstCard.suit;
+        if (dealerFirstSuit === "♣") dealerFirstSuit = "C";
+        if (dealerFirstSuit === "♦") dealerFirstSuit = "D";
+        if (dealerFirstSuit === "♥") dealerFirstSuit = "H";
+        if (dealerFirstSuit === "♠") dealerFirstSuit = "S";
         let hiddenSuit = hidden.suit;
         if (hiddenSuit === "♣") hiddenSuit = "C";
         if (hiddenSuit === "♦") hiddenSuit = "D";
         if (hiddenSuit === "♥") hiddenSuit = "H";
         if (hiddenSuit === "♠") hiddenSuit = "S";
-        dealerSum = getValue(hidden.value + "-" + hiddenSuit);
-        dealerAceCount = checkAce(hidden.value + "-" + hiddenSuit);
-        if (el("dealer-cards")) el("dealer-cards").innerHTML = '<img id="hidden" src="cards/BACK.png">';
-        while (dealerSum < 17) {
-            let card = deck.pop();
-            let cardImg = document.createElement("img");
-            let suit = card.suit;
-            if (suit === "♣") suit = "C";
-            if (suit === "♦") suit = "D";
-            if (suit === "♥") suit = "H";
-            if (suit === "♠") suit = "S";
-            cardImg.src = "./cards/" + card.value + "-" + suit + ".png";
-            dealerSum += getValue(card.value + "-" + suit);
-            dealerAceCount += checkAce(card.value + "-" + suit);
-            if (el("dealer-cards")) el("dealer-cards").append(cardImg);
+        dealerSum = getValue(window.dealerFirstCard.value + "-" + dealerFirstSuit) + getValue(hidden.value + "-" + hiddenSuit);
+        dealerAceCount = checkAce(window.dealerFirstCard.value + "-" + dealerFirstSuit) + checkAce(hidden.value + "-" + hiddenSuit);
+        if (el("dealer-cards")) {
+            el("dealer-cards").innerHTML = '<img id="dealer-first" src="cards/' + window.dealerFirstCard.value + '-' + dealerFirstSuit + '.png"><img id="hidden" src="cards/BACK.png">';
         }
         // Player setup
         if (el("your-cards")) el("your-cards").innerHTML = "";
@@ -394,4 +357,74 @@ function startGame() {
         if (el("hit")) el("hit").onclick = hit;
         if (el("stay")) el("stay").onclick = stay;
     }
+}
+
+function stay() {
+    canHit = false;
+    yourSum = reduceAce(yourSum, yourAceCount);
+    dealerSum = reduceAce(dealerSum, dealerAceCount);
+    const el = getEl;
+    // Reveal dealer's hidden card and draw additional cards if needed
+    if (el("dealer-cards")) {
+        el("dealer-cards").innerHTML = "";
+        // Show first card
+        let dealerFirstSuit = window.dealerFirstCard.suit;
+        if (dealerFirstSuit === "♣") dealerFirstSuit = "C";
+        if (dealerFirstSuit === "♦") dealerFirstSuit = "D";
+        if (dealerFirstSuit === "♥") dealerFirstSuit = "H";
+        if (dealerFirstSuit === "♠") dealerFirstSuit = "S";
+        let dealerFirstImg = document.createElement("img");
+        dealerFirstImg.src = "./cards/" + window.dealerFirstCard.value + "-" + dealerFirstSuit + ".png";
+        el("dealer-cards").append(dealerFirstImg);
+        // Show hidden card
+        let hiddenSuit = hidden.suit;
+        if (hiddenSuit === "♣") hiddenSuit = "C";
+        if (hiddenSuit === "♦") hiddenSuit = "D";
+        if (hiddenSuit === "♥") hiddenSuit = "H";
+        if (hiddenSuit === "♠") hiddenSuit = "S";
+        let hiddenImg = document.createElement("img");
+        hiddenImg.src = "./cards/" + hidden.value + "-" + hiddenSuit + ".png";
+        el("dealer-cards").append(hiddenImg);
+        // Dealer draws additional cards if needed
+        let tempSum = getValue(window.dealerFirstCard.value + "-" + dealerFirstSuit) + getValue(hidden.value + "-" + hiddenSuit);
+        let tempAceCount = checkAce(window.dealerFirstCard.value + "-" + dealerFirstSuit) + checkAce(hidden.value + "-" + hiddenSuit);
+        while (tempSum < 17) {
+            let card = deck.pop();
+            let suit = card.suit;
+            if (suit === "♣") suit = "C";
+            if (suit === "♦") suit = "D";
+            if (suit === "♥") suit = "H";
+            if (suit === "♠") suit = "S";
+            let cardImg = document.createElement("img");
+            cardImg.src = "./cards/" + card.value + "-" + suit + ".png";
+            el("dealer-cards").append(cardImg);
+            tempSum += getValue(card.value + "-" + suit);
+            tempAceCount += checkAce(card.value + "-" + suit);
+            tempSum = reduceAce(tempSum, tempAceCount);
+        }
+    }
+    if (el("dealer-sum")) el("dealer-sum").innerText = dealerSum;
+    // Delay before showing results
+    let message = "";
+    let p1Bet = typeof bet === 'object' ? bet.p1 : bet;
+    setTimeout(function () {
+        if (yourSum > 21) {
+            message = "Bust! You Lose!";
+            credits.p1 -= p1Bet;
+        } else if (dealerSum > 21) {
+            message = "Dealer Busts! You Win!";
+            credits.p1 += p1Bet;
+        } else if (yourSum == dealerSum) {
+            message = "Tie!";
+        } else if (yourSum > dealerSum) {
+            message = "You Win!";
+            credits.p1 += p1Bet;
+        } else {
+            message = "You Lose!";
+            credits.p1 -= p1Bet;
+        }
+        updateCredits();
+        if (el("results")) el("results").innerText = message;
+        showResultModal(message);
+    }, 1200); // 1.2 second delay
 }
