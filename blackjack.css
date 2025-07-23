@@ -1,0 +1,199 @@
+body {
+    background: radial-gradient(circle at 50% 20%, #2c3e50 0%, #1a1a1a 100%);
+    color: #f5f5f5;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px #000c;
+    padding: 28px 22px 36px 22px;
+    border: 2px solid #ffd700;
+}
+.title {
+    text-align: center;
+    font-size: 2.4em;
+    margin-bottom: 18px;
+    letter-spacing: 2px;
+    color: #ffd700;
+    text-shadow: 0 2px 8px #000a;
+}
+.mode-row, .credits-row, .bet-row, .button-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.credits-row > div {
+    min-width: 160px;
+    text-align: center;
+    font-size: 1.1em;
+    color: #ffd700;
+    background: #222d;
+    border-radius: 8px;
+    padding: 6px 0;
+    box-shadow: 0 2px 8px #0004;
+}
+.bet-row label {
+    margin-right: 6px;
+    color: #ffec80;
+    font-weight: bold;
+}
+.bet-row input[type=number] {
+    background: #222;
+    color: #ffd700;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 1em;
+    box-shadow: 0 1px 4px #0003;
+}
+.game-btn {
+    background: linear-gradient(90deg, #ffd700 0%, #ffec80 100%);
+    color: #222;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #0003;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.game-btn:hover {
+    background: linear-gradient(90deg, #ffec80 0%, #ffd700 100%);
+    color: #111;
+}
+.game-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 1px 4px #0002;
+}
+.turn-indicator {
+    text-align: center;
+    font-size: 1.15em;
+    margin-bottom: 12px;
+    color: #ffec80;
+    text-shadow: 0 1px 4px #000a;
+}
+#dealer-cards img, #your-cards img {
+    width: 54px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px #0006;
+    transition: transform 0.3s cubic-bezier(.68,-0.55,.27,1.55), box-shadow 0.2s;
+    opacity: 0;
+    transform: scale(0.8) rotate(-8deg);
+    animation: cardIn 0.5s forwards;
+}
+@keyframes cardIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) rotate(-8deg);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.08) rotate(2deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+#dealer-cards, #your-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 60px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+#dealer-label, #player-label {
+    text-align: center;
+    margin: 10px 0 6px 0;
+    color: #ffec80;
+    text-shadow: 0 1px 4px #000a;
+}
+#results {
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 14px;
+    color: #ff4c4c;
+    text-shadow: 0 1px 4px #000a;
+    animation: fadeInResult 0.6s;
+}
+@keyframes fadeInResult {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    min-width: 260px;
+    box-shadow: 0 2px 24px #000a;
+    position: relative;
+    border: 2px solid #ffd700;
+    animation: popIn 0.5s cubic-bezier(.68,-0.55,.27,1.55);
+}
+@keyframes popIn {
+    0% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.close {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 2em;
+    color: #ffd700;
+    cursor: pointer;
+    font-weight: bold;
+    text-shadow: 0 1px 4px #000a;
+}
+#play-again {
+    margin-top: 22px;
+    background: linear-gradient(90deg, #ffd700 0%, #ffec80 100%);
+    color: #222;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0003;
+}
+@media (max-width: 600px) {
+    .container {
+        max-width: 98vw;
+        padding: 10px;
+    }
+    .modal-content {
+        min-width: 180px;
+        padding: 18px 8px;
+    }
+    .title {
+        font-size: 1.5em;
+    }
+}

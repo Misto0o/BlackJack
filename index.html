@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Blackjack | Play Offline BlackJack with local Multiplayer & Single Player Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
+    <meta name="keywords" content="blackjack, online blackjack, free blackjack, card game, pwa, multiplayer, single player, casino, play with friend">
+    <meta name="author" content="Kristian Cook">
+    <meta property="og:title" content="Blackjack | Play Online Free Multiplayer & Single Player Game">
+    <meta property="og:description" content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/cards/BACK.png">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <link rel="stylesheet" href="blackjack.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="/cards/BACK.png">
+    <meta name="theme-color" content="#232526">
+    <link rel="apple-touch-icon" href="/cards/BACK.png">
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Blackjack</h1>
+        <div class="mode-row">
+            <label for="mode-toggle">Mode:</label>
+            <select id="mode-toggle" class="game-btn">
+                <option value="single">Single Player</option>
+                <option value="friend">Play with Friend</option>
+            </select>
+        </div>
+        <div class="credits-row">
+            <div><strong>Player 1 Credits:</strong> <span id="credits-p1">100</span></div>
+            <div id="credits-p2-wrap" style="display:none;"><strong>Player 2 Credits:</strong> <span
+                    id="credits-p2">100</span></div>
+        </div>
+        <div id="bet-row" class="bet-row"></div>
+        <div id="turn-indicator" class="turn-indicator">Your Turn</div>
+        <h2 id="dealer-label">Dealer: <span id="dealer-sum"></span></h2>
+        <div id="dealer-cards">
+            <img id="hidden" src="cards/BACK.png">
+        </div>
+        <h2 id="player-label">You: <span id="your-sum"></span></h2>
+        <div id="your-cards"></div>
+        <div class="button-row">
+            <button id="hit" class="game-btn">Hit</button>
+            <button id="stay" class="game-btn">Stay</button>
+        </div>
+        <p id="results"></p>
+    </div>
+    <div id="result-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2 id="modal-title"></h2>
+            <p id="modal-message"></p>
+            <button id="play-again" class="game-btn">Play Again</button>
+        </div>
+    </div>
+    <script type="module" src="blackjack.js"></script>
+    <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+    </script>
+</body>
+
+</html>
