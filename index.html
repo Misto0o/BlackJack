@@ -21,6 +21,10 @@
     <link rel="icon" type="image/png" href="/cards/BACK.png">
     <meta name="theme-color" content="#232526">
     <link rel="apple-touch-icon" href="/cards/BACK.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body>
@@ -60,6 +64,32 @@
             <button id="play-again" class="game-btn">Play Again</button>
         </div>
     </div>
+    <button id="help-btn" class="help-btn" aria-label="Help">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <!-- Side Modal -->
+    <div id="help-modal" class="help-modal">
+        <div class="help-modal-content">
+            <button id="close-help" class="close-help" aria-label="Close Help">&times;</button>
+            <h2>How to Play Blackjack</h2>
+            <p>
+                - Try to get cards totaling as close to 21 without going over.<br />
+                - Aces count as 1 or 11, Game dynamically chooses for you<br />
+                - Face cards are worth 10.<br />
+                - Beat the dealer to win credits.<br />
+                - In multiplayer mode, play against a friend.<br />
+                <strong> - Place bets before each round.<br /> </strong>
+                <br />
+                <em>
+                    Made by: <a href="https://builtbykristian.netlify.app" target="_blank"
+                        rel="noopener noreferrer">Kristian Cook</a>
+                </em>
+
+            </p>
+        </div>
+    </div>
+
     <script type="module" src="blackjack.js"></script>
     <script>
         // Register service worker for PWA
@@ -68,6 +98,24 @@
                 navigator.serviceWorker.register('service-worker.js');
             });
         }
+        const helpBtn = document.getElementById('help-btn');
+        const helpModal = document.getElementById('help-modal');
+        const closeHelp = document.getElementById('close-help');
+
+        helpBtn.addEventListener('click', () => {
+            helpModal.classList.add('show');
+        });
+
+        closeHelp.addEventListener('click', () => {
+            helpModal.classList.remove('show');
+        });
+
+        // Optional: close modal if clicked outside content
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                helpModal.classList.remove('show');
+            }
+        });
     </script>
 </body>
 

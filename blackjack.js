@@ -113,9 +113,21 @@ function hitFriend() {
     if (turn === 1) {
         yourSum += getValue(card.value + "-" + suit);
         yourAceCount += checkAce(card.value + "-" + suit);
+
+        // ⚡️ Auto-adjust Aces for Player 1:
+        let adjustedSum = reduceAce(yourSum, yourAceCount);
+        if (adjustedSum !== yourSum) {
+            yourSum = adjustedSum;
+        }
     } else {
         player2Sum += getValue(card.value + "-" + suit);
         player2AceCount += checkAce(card.value + "-" + suit);
+
+        // ⚡️ Auto-adjust Aces for Player 2:
+        let adjustedSum = reduceAce(player2Sum, player2AceCount);
+        if (adjustedSum !== player2Sum) {
+            player2Sum = adjustedSum;
+        }
     }
     const el = getEl("your-cards");
     if (el) el.append(cardImg);
@@ -204,14 +216,24 @@ function hit() {
     cardImg.src = "./cards/" + card.value + "-" + suit + ".png";
     yourSum += getValue(card.value + "-" + suit);
     yourAceCount += checkAce(card.value + "-" + suit);
+
+    // ⚡️ Auto-adjust Aces BEFORE updating UI:
+    let adjustedSum = reduceAce(yourSum, yourAceCount);
+    if (adjustedSum !== yourSum) {
+        yourSum = adjustedSum;
+    }
+
     const el = getEl("your-cards");
     if (el) el.append(cardImg);
+
     updateScores();
-    if (reduceAce(yourSum, yourAceCount) > 21) {
+
+    if (yourSum > 21) {
         canHit = false;
         stay();
     }
 }
+
 
 // UI setup
 document.addEventListener("DOMContentLoaded", () => {
