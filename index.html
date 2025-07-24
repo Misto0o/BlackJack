@@ -5,14 +5,17 @@
     <meta charset="UTF-8">
     <title>Blackjack | Play Offline BlackJack with local Multiplayer & Single Player Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
-    <meta name="keywords" content="blackjack, online blackjack, free blackjack, card game, pwa, multiplayer, single player, casino, play with friend">
+    <meta name="description"
+        content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
+    <meta name="keywords"
+        content="blackjack, online blackjack, free blackjack, card game, pwa, multiplayer, single player, casino, play with friend">
     <meta name="author" content="Kristian Cook">
     <meta property="og:title" content="Blackjack | Play Online Free Multiplayer & Single Player Game">
-    <meta property="og:description" content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
+    <meta property="og:description"
+        content="Play Blackjack online for free! Single player and multiplayer friend mode. Modern UI, no registration required. Sideload as a PWA on your phone.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="/cards/BACK.png">
-    <meta property="og:url" content="https://yourdomain.com/">
+    <meta property="og:url" content="https://blackjackmist.netlify.app/">
     <link rel="stylesheet" href="blackjack.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="/cards/BACK.png">
@@ -41,7 +44,7 @@
         <div id="dealer-cards">
             <img id="hidden" src="cards/BACK.png">
         </div>
-        <h2 id="player-label">You: <span id="your-sum"></span></h2>
+        <h2 id="player-label">Your Hand: <span id="player-sum"></span></h2>
         <div id="your-cards"></div>
         <div class="button-row">
             <button id="hit" class="game-btn">Hit</button>
@@ -59,12 +62,12 @@
     </div>
     <script type="module" src="blackjack.js"></script>
     <script>
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('service-worker.js');
+            });
+        }
     </script>
 </body>
 

@@ -25,6 +25,13 @@ body {
   text-shadow: 0 2px 8px #000a;
 }
 
+#your-sum {
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 1.3em;
+  margin-left: 8px;
+}
+
 .mode-row,
 .credits-row,
 .bet-row,

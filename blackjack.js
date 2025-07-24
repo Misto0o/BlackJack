@@ -16,25 +16,50 @@ let betPlaced = false;
 let mode = "single";
 let credits = { p1: 100, p2: 100 };
 
+console.log("player-sum element at script start:", document.getElementById("player-sum"));
+
 // Utility functions
 function getEl(id) {
     const el = document.getElementById(id);
     if (!el) console.warn(`Element with ID '${id}' not found.`);
     return el;
 }
+
 function updateCredits() {
     const p1 = getEl("credits-p1");
     const p2 = getEl("credits-p2");
     if (p1) p1.innerText = credits.p1;
     if (p2) p2.innerText = credits.p2;
+
+    const betP1 = getEl("bet-amount-p1");
+    if (betP1) {
+        betP1.max = credits.p1;
+        if (parseInt(betP1.value) > credits.p1) {
+            betP1.value = credits.p1;  // Clamp bet to current credits
+        } else if (parseInt(betP1.value) < 1) {
+            betP1.value = 1;
+        }
+    }
+
+    const betP2 = getEl("bet-amount-p2");
+    if (betP2) {
+        betP2.max = credits.p2;
+        if (parseInt(betP2.value) > credits.p2) {
+            betP2.value = credits.p2;
+        } else if (parseInt(betP2.value) < 1) {
+            betP2.value = 1;
+        }
+    }
 }
+
+
 function updateScores() {
-    const yourSumEl = getEl("your-sum");
-    if (!yourSumEl) return;
+    const playerSumEl = getEl("player-sum");
+    if (!playerSumEl) return;
     if (mode === "friend") {
-        yourSumEl.innerText = turn === 1 ? yourSum : player2Sum;
+        playerSumEl.innerText = turn === 1 ? yourSum : player2Sum;
     } else {
-        yourSumEl.innerText = yourSum;
+        playerSumEl.innerText = yourSum;
     }
 }
 function getValue(card) {
@@ -71,7 +96,7 @@ function showResultModal(message) {
             modalMessage.textContent = 'It\'s a draw.';
         }
         modal.style.display = 'flex';
-    }, 1.4); // 1.4 second delay after dealer cards are revealed
+    }, 1400); // 1.4 second delay after dealer cards are revealed
 }
 
 // Friend mode hit
@@ -107,7 +132,7 @@ function stayFriend() {
         canHit = false;
         if (el("your-cards")) el("your-cards").innerHTML = "";
         if (el("your-sum")) el("your-sum").innerText = "";
-        if (el("player-label")) el("player-label").innerText = "Player 2: ";
+        if (el("player-sum")) el("player-sum").innerText = "Player 2: ";
         if (el("turn-indicator")) el("turn-indicator").innerText = "Player 2's Turn";
         turn = 2;
         canHit = true;
@@ -135,28 +160,32 @@ function stayFriend() {
         let message = "";
         let p1Bet = typeof bet === 'object' ? bet.p1 : bet;
         let p2Bet = typeof bet === 'object' ? bet.p2 : bet;
+        let totalPot = p1Bet + p2Bet;
         if (yourSum > 21 && player2Sum > 21) {
             message = "Both Bust! Tie!";
+            // No credit changes
         } else if (yourSum > 21) {
             message = "Player 2 Wins!";
-            credits.p2 += p2Bet;
-            credits.p1 -= p1Bet;
+            credits.p2 += totalPot;     // Winner gets both bets
+            credits.p1 -= p1Bet;        // Loser loses their own bet only
         } else if (player2Sum > 21) {
             message = "Player 1 Wins!";
-            credits.p1 += p1Bet;
+            credits.p1 += totalPot;
             credits.p2 -= p2Bet;
         } else if (yourSum == player2Sum) {
             message = "Tie!";
+            // No credit changes
         } else if (yourSum > player2Sum) {
             message = "Player 1 Wins!";
-            credits.p1 += p1Bet;
+            credits.p1 += totalPot;
             credits.p2 -= p2Bet;
         } else {
             message = "Player 2 Wins!";
-            credits.p2 += p2Bet;
+            credits.p2 += totalPot;
             credits.p1 -= p1Bet;
         }
-        updateCredits();
+
+        updateCredits(); // <-- update max and values after credits change
         if (el("results")) el("results").innerText = message;
         showResultModal(message);
     }
@@ -185,13 +214,14 @@ function hit() {
 }
 
 // UI setup
-window.onload = function () {
+document.addEventListener("DOMContentLoaded", () => {
+    getEl("player-sum").innerText = yourSum;
     deck = new Deck();
     deck.shuffle();
     setupBetInputs();
     setupUI();
     updateCredits();
-};
+});
 
 function setupBetInputs() {
     const betRow = getEl("bet-row");
@@ -208,6 +238,17 @@ function setupBetInputs() {
     getEl("bet-amount-p2").style.display = "none";
 }
 
+function sanitizeBetInput(id, maxCredits) {
+    const input = getEl(id);
+    if (!input) return 1;
+    let val = parseInt(input.value);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > maxCredits) val = maxCredits;
+    input.value = val;  // fix input value to valid number
+    return val;
+}
+
+
 function setupUI() {
     getEl("mode-toggle").addEventListener("change", function (e) {
         mode = e.target.value;
@@ -216,16 +257,27 @@ function setupUI() {
         getEl("bet-amount-p2").style.display = (mode === "friend") ? "inline-block" : "none";
         resetGame();
     });
+
     getEl("place-bet").addEventListener("click", function () {
-        let val1 = parseInt(getEl("bet-amount-p1").value);
-        let val2 = mode === "friend" ? parseInt(getEl("bet-amount-p2").value) : val1;
-        if (val1 > 0 && val1 <= credits.p1 && val2 > 0 && val2 <= credits.p2) {
-            bet = mode === "friend" ? { p1: val1, p2: val2 } : val1;
-            betPlaced = true;
-            getEl("place-bet").disabled = true;
-            startGame();
-        }
+        // Update max dynamically to current credits
+        getEl("bet-amount-p1").max = credits.p1;
+        getEl("bet-amount-p2").max = credits.p2;
+
+        // Sanitize inputs, clamping values inside sanitizeBetInput()
+        let val1 = sanitizeBetInput("bet-amount-p1", credits.p1);
+        let val2 = mode === "friend" ? sanitizeBetInput("bet-amount-p2", credits.p2) : val1;
+
+        // Instead of alerting, just proceed with clamped values
+        if (val1 < 1) val1 = 1;
+        if (val2 < 1) val2 = 1;
+
+        // Set bet accordingly
+        bet = mode === "friend" ? { p1: val1, p2: val2 } : val1;
+        betPlaced = true;
+        getEl("place-bet").disabled = true;
+        startGame();
     });
+
     getEl("new-game").addEventListener("click", function () {
         credits = { p1: 100, p2: 100 };
         updateCredits();
@@ -270,12 +322,13 @@ function resetGame() {
         if (el("dealer-sum")) el("dealer-sum").innerText = "";
     }
     if (el("your-cards")) el("your-cards").innerHTML = "";
-    if (el("your-sum")) el("your-sum").innerText = "";
+    if (el("player-sum")) el("player-sum").innerText = "";
     if (el("results")) el("results").innerText = "";
-    if (el("player-label")) el("player-label").innerText = mode === "friend" ? "Player 1: " : "You: ";
+    if (el("player-sum")) el("player-sum").innerText = mode === "friend" ? "Player 1: " : "You: ";
     if (el("turn-indicator")) el("turn-indicator").innerText = mode === "friend" ? "Player 1's Turn" : "Your Turn";
     if (el("hit")) el("hit").style.display = "inline-block";
     if (el("stay")) el("stay").style.display = "inline-block";
+    updateScores();
 }
 
 checkCredits();
@@ -402,6 +455,8 @@ function stay() {
             tempAceCount += checkAce(card.value + "-" + suit);
             tempSum = reduceAce(tempSum, tempAceCount);
         }
+        dealerSum = tempSum;
+        dealerAceCount = tempAceCount;
     }
     if (el("dealer-sum")) el("dealer-sum").innerText = dealerSum;
     // Delay before showing results
@@ -423,7 +478,7 @@ function stay() {
             message = "You Lose!";
             credits.p1 -= p1Bet;
         }
-        updateCredits();
+        updateCredits(); // update bet inputs after credits change
         if (el("results")) el("results").innerText = message;
         showResultModal(message);
     }, 1200); // 1.2 second delay
