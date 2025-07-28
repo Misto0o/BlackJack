@@ -28,8 +28,8 @@ function getEl(id) {
 function updateCredits() {
     const p1 = getEl("credits-p1");
     const p2 = getEl("credits-p2");
-    if (p1) p1.innerText = credits.p1;
-    if (p2) p2.innerText = credits.p2;
+    if (p1) p1.innerText = Math.max(0, credits.p1);
+    if (p2) p2.innerText = Math.max(0, credits.p2);
 
     const betP1 = getEl("bet-amount-p1");
     if (betP1) {
@@ -39,6 +39,8 @@ function updateCredits() {
         } else if (parseInt(betP1.value) < 1) {
             betP1.value = 1;
         }
+        // Disable bet input if credits are zero
+        betP1.disabled = credits.p1 <= 0;
     }
 
     const betP2 = getEl("bet-amount-p2");
@@ -49,6 +51,36 @@ function updateCredits() {
         } else if (parseInt(betP2.value) < 1) {
             betP2.value = 1;
         }
+        // Disable bet input if credits are zero
+        betP2.disabled = credits.p2 <= 0;
+    }
+
+    // Disable place-bet button if either player has zero credits
+    const placeBetBtn = getEl("place-bet");
+    if (placeBetBtn) {
+        placeBetBtn.disabled = credits.p1 <= 0 || (mode === "friend" && credits.p2 <= 0);
+        placeBetBtn.style.opacity = placeBetBtn.disabled ? "0.5" : "1";
+        placeBetBtn.style.pointerEvents = placeBetBtn.disabled ? "none" : "auto";
+    }
+    // Grey out hit and stay if disabled
+    const hitBtn = getEl("hit");
+    if (hitBtn) {
+        hitBtn.style.opacity = hitBtn.disabled ? "0.5" : "1";
+        hitBtn.style.pointerEvents = hitBtn.disabled ? "none" : "auto";
+    }
+    const stayBtn = getEl("stay");
+    if (stayBtn) {
+        stayBtn.style.opacity = stayBtn.disabled ? "0.5" : "1";
+        stayBtn.style.pointerEvents = stayBtn.disabled ? "none" : "auto";
+    }
+    // Grey out bet inputs
+    if (betP1) {
+        betP1.style.opacity = betP1.disabled ? "0.5" : "1";
+        betP1.style.pointerEvents = betP1.disabled ? "none" : "auto";
+    }
+    if (betP2) {
+        betP2.style.opacity = betP2.disabled ? "0.5" : "1";
+        betP2.style.pointerEvents = betP2.disabled ? "none" : "auto";
     }
 }
 
@@ -57,9 +89,11 @@ function updateScores() {
     const playerSumEl = getEl("player-sum");
     if (!playerSumEl) return;
     if (mode === "friend") {
-        playerSumEl.innerText = turn === 1 ? yourSum : player2Sum;
+        let reduced = reduceAce(turn === 1 ? yourSum : player2Sum, turn === 1 ? yourAceCount : player2AceCount);
+        playerSumEl.innerText = reduced.sum;
     } else {
-        playerSumEl.innerText = yourSum;
+        let reduced = reduceAce(yourSum, yourAceCount);
+        playerSumEl.innerText = reduced.sum;
     }
 }
 function getValue(card) {
@@ -74,10 +108,11 @@ function checkAce(card) {
 function reduceAce(sum, aceCount) {
     while (sum > 21 && aceCount > 0) {
         sum -= 10;
-        aceCount -= 1;
+        aceCount--;
     }
-    return sum;
+    return { sum, aceCount };
 }
+
 function showResultModal(message) {
     let modal = getEl('result-modal');
     let modalTitle = getEl('modal-title');
@@ -113,21 +148,15 @@ function hitFriend() {
     if (turn === 1) {
         yourSum += getValue(card.value + "-" + suit);
         yourAceCount += checkAce(card.value + "-" + suit);
-
-        // ⚡️ Auto-adjust Aces for Player 1:
-        let adjustedSum = reduceAce(yourSum, yourAceCount);
-        if (adjustedSum !== yourSum) {
-            yourSum = adjustedSum;
-        }
+        let reduced = reduceAce(yourSum, yourAceCount);
+        yourSum = reduced.sum;
+        yourAceCount = reduced.aceCount;
     } else {
         player2Sum += getValue(card.value + "-" + suit);
         player2AceCount += checkAce(card.value + "-" + suit);
-
-        // ⚡️ Auto-adjust Aces for Player 2:
-        let adjustedSum = reduceAce(player2Sum, player2AceCount);
-        if (adjustedSum !== player2Sum) {
-            player2Sum = adjustedSum;
-        }
+        let reduced = reduceAce(player2Sum, player2AceCount);
+        player2Sum = reduced.sum;
+        player2AceCount = reduced.aceCount;
     }
     const el = getEl("your-cards");
     if (el) el.append(cardImg);
@@ -140,7 +169,9 @@ function hitFriend() {
 function stayFriend() {
     const el = getEl;
     if (turn === 1) {
-        yourSum = reduceAce(yourSum, yourAceCount);
+        let reduced = reduceAce(yourSum, yourAceCount);
+        yourSum = reduced.sum;
+        yourAceCount = reduced.aceCount; // So future hits can't treat the same Ace as 11 again
         canHit = false;
         if (el("your-cards")) el("your-cards").innerHTML = "";
         if (el("your-sum")) el("your-sum").innerText = "";
@@ -218,10 +249,9 @@ function hit() {
     yourAceCount += checkAce(card.value + "-" + suit);
 
     // ⚡️ Auto-adjust Aces BEFORE updating UI:
-    let adjustedSum = reduceAce(yourSum, yourAceCount);
-    if (adjustedSum !== yourSum) {
-        yourSum = adjustedSum;
-    }
+    let reduced = reduceAce(yourSum, yourAceCount);
+    yourSum = reduced.sum;
+    yourAceCount = reduced.aceCount;
 
     const el = getEl("your-cards");
     if (el) el.append(cardImg);
@@ -285,6 +315,16 @@ function setupUI() {
         getEl("bet-amount-p1").max = credits.p1;
         getEl("bet-amount-p2").max = credits.p2;
 
+        // Prevent betting or playing if credits are zero
+        if (credits.p1 <= 0 || (mode === "friend" && credits.p2 <= 0)) {
+            if (getEl("place-bet")) getEl("place-bet").disabled = true;
+            if (getEl("bet-amount-p1")) getEl("bet-amount-p1").disabled = true;
+            if (getEl("bet-amount-p2")) getEl("bet-amount-p2").disabled = true;
+            if (getEl("hit")) getEl("hit").disabled = true;
+            if (getEl("stay")) getEl("stay").disabled = true;
+            return;
+        }
+
         // Sanitize inputs, clamping values inside sanitizeBetInput()
         let val1 = sanitizeBetInput("bet-amount-p1", credits.p1);
         let val2 = mode === "friend" ? sanitizeBetInput("bet-amount-p2", credits.p2) : val1;
@@ -309,10 +349,49 @@ function setupUI() {
         getEl("place-bet").disabled = false;
         getEl("result-modal").style.display = "none";
     });
+    // Add a separate out-of-credits modal
+    let outModal = getEl('out-modal');
+    let outModalMessage = getEl('out-modal-message');
+    let outModalClose = getEl('close-out-modal');
+    if (!outModal) {
+        // Create modal if not present
+        outModal = document.createElement('div');
+        outModal.id = 'out-modal';
+        outModal.className = 'modal';
+        outModal.style.display = 'none';
+        outModal.innerHTML = `
+            <div class="modal-content">
+                <span id="close-out-modal" class="close">&times;</span>
+                <h2>Out of Credits!</h2>
+                <p id="out-modal-message">You are out of credits! Click New Game to restart.</p>
+            </div>
+        `;
+        document.body.appendChild(outModal);
+        outModalMessage = getEl('out-modal-message');
+        outModalClose = getEl('close-out-modal');
+    }
+    // Show out-of-credits modal and close result modal
+    function showOutOfCreditsModal() {
+        getEl('result-modal').style.display = 'none';
+        outModal.style.display = 'flex';
+    }
+    if (outModalClose) {
+        outModalClose.onclick = function () {
+            outModal.style.display = 'none';
+        };
+    }
     getEl("close-modal").onclick = function () {
+        if (credits.p1 <= 0 || (mode === "friend" && credits.p2 <= 0)) {
+            showOutOfCreditsModal();
+            return;
+        }
         getEl("result-modal").style.display = "none";
     };
     getEl("play-again").onclick = function () {
+        if (credits.p1 <= 0 || (mode === "friend" && credits.p2 <= 0)) {
+            showOutOfCreditsModal();
+            return;
+        }
         resetGame();
         getEl("result-modal").style.display = "none";
         getEl("place-bet").disabled = false;
@@ -361,8 +440,23 @@ function checkCredits() {
         let modalMessage = getEl('modal-message');
         if (!modal || !modalTitle || !modalMessage) return;
         modalTitle.textContent = 'Game Over!';
-        modalMessage.textContent = (credits.p1 <= 0 ? 'Player 1' : 'Player 2') + ' is out of credits! Click Play Again to restart.';
+        modalMessage.textContent = (credits.p1 <= 0 ? 'Player 1' : 'Player 2') + ' is out of credits! Click New Game to restart.';
         modal.style.display = 'flex';
+        // Disable all game controls except New Game
+        if (getEl('hit')) getEl('hit').disabled = true;
+        if (getEl('stay')) getEl('stay').disabled = true;
+        if (getEl('place-bet')) getEl('place-bet').disabled = true;
+        if (getEl('bet-amount-p1')) getEl('bet-amount-p1').disabled = true;
+        if (getEl('bet-amount-p2')) getEl('bet-amount-p2').disabled = true;
+        if (getEl('play-again')) getEl('play-again').disabled = true;
+    } else {
+        // Enable controls if credits are restored
+        if (getEl('hit')) getEl('hit').disabled = false;
+        if (getEl('stay')) getEl('stay').disabled = false;
+        if (getEl('place-bet')) getEl('place-bet').disabled = false;
+        if (getEl('bet-amount-p1')) getEl('bet-amount-p1').disabled = false;
+        if (getEl('bet-amount-p2')) getEl('bet-amount-p2').disabled = false;
+        if (getEl('play-again')) getEl('play-again').disabled = false;
     }
 }
 
@@ -436,8 +530,12 @@ function startGame() {
 
 function stay() {
     canHit = false;
-    yourSum = reduceAce(yourSum, yourAceCount);
-    dealerSum = reduceAce(dealerSum, dealerAceCount);
+    let reduced = reduceAce(yourSum, yourAceCount);
+    yourSum = reduced.sum;
+    yourAceCount = reduced.aceCount;
+    let reducedDealer = reduceAce(dealerSum, dealerAceCount);
+    dealerSum = reducedDealer.sum;
+    dealerAceCount = reducedDealer.aceCount;
     const el = getEl;
     // Reveal dealer's hidden card and draw additional cards if needed
     if (el("dealer-cards")) {
@@ -475,7 +573,9 @@ function stay() {
             el("dealer-cards").append(cardImg);
             tempSum += getValue(card.value + "-" + suit);
             tempAceCount += checkAce(card.value + "-" + suit);
-            tempSum = reduceAce(tempSum, tempAceCount);
+            let reduced = reduceAce(tempSum, tempAceCount);
+            tempSum = reduced.sum;
+            tempAceCount = reduced.aceCount;
         }
         dealerSum = tempSum;
         dealerAceCount = tempAceCount;
@@ -487,7 +587,7 @@ function stay() {
     setTimeout(function () {
         if (yourSum > 21) {
             message = "Bust! You Lose!";
-            credits.p1 -= p1Bet;
+            credits.p1 = Math.max(0, credits.p1 - p1Bet);
         } else if (dealerSum > 21) {
             message = "Dealer Busts! You Win!";
             credits.p1 += p1Bet;
@@ -498,7 +598,7 @@ function stay() {
             credits.p1 += p1Bet;
         } else {
             message = "You Lose!";
-            credits.p1 -= p1Bet;
+            credits.p1 = Math.max(0, credits.p1 - p1Bet);
         }
         updateCredits(); // update bet inputs after credits change
         if (el("results")) el("results").innerText = message;

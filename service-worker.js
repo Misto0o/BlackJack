@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blackjack-pwa-v5';
+const CACHE_NAME = 'blackjack-pwa-v6';
 
 const urlsToCache = [
   '/',

@@ -16,7 +16,7 @@
     <meta property="og:type" content="website">
     <meta property="og:image" content="/cards/BACK.png">
     <meta property="og:url" content="https://blackjackmist.netlify.app/">
-    <link rel="stylesheet" href="blackjack.css?v=5">
+    <link rel="stylesheet" href="blackjack.css?v=6">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="/cards/BACK.png">
     <meta name="theme-color" content="#232526">
@@ -42,7 +42,16 @@
             <div id="credits-p2-wrap" style="display:none;"><strong>Player 2 Credits:</strong> <span
                     id="credits-p2">100</span></div>
         </div>
-        <div id="bet-row" class="bet-row"></div>
+        <div id="bet-row" class="bet-row">
+            <label for="bet-amount-p1">Bet P1:</label>
+            <input type="number" id="bet-amount-p1" min="1" max="99999" value="10" class="game-btn"
+                style="width:70px;">
+            <label for="bet-amount-p2" id="bet-label-p2" style="display:none;">Bet P2:</label>
+            <input type="number" id="bet-amount-p2" min="1" max="99999" value="10" class="game-btn"
+                style="width:70px; display:none;">
+            <button id="place-bet" class="game-btn">Place Bet</button>
+            <button id="new-game" class="game-btn">New Game</button>
+        </div>
         <div id="turn-indicator" class="turn-indicator">Your Turn</div>
         <h2 id="dealer-label">Dealer: <span id="dealer-sum"></span></h2>
         <div id="dealer-cards">
@@ -62,6 +71,13 @@
             <h2 id="modal-title"></h2>
             <p id="modal-message"></p>
             <button id="play-again" class="game-btn">Play Again</button>
+        </div>
+    </div>
+    <div id="out-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="close-out-modal" class="close">&times;</span>
+            <h2>Out of Credits!</h2>
+            <p id="out-modal-message">You are out of credits! Click New Game to restart.</p>
         </div>
     </div>
     <button id="help-btn" class="help-btn" aria-label="Help">
@@ -90,7 +106,7 @@
         </div>
     </div>
 
-    <script type="module" src="blackjack.js?v=5"></script>
+    <script type="module" src="blackjack.js?v=6"></script>
     <script>
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {
