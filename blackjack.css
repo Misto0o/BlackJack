@@ -74,6 +74,10 @@ h2,
   z-index: 1100;
 }
 
+#close-modal {
+  display: none;
+}
+
 .container {
   max-width: 500px;
   margin: 40px auto;
